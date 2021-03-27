@@ -1,12 +1,19 @@
 import os
-
+import time
 cwd = os.getcwd()
 
 
 def create_db(cursor):
     create_user_table(cursor)
     create_ws_table(cursor)
-
+    print("Creating rtMatrix table.....")
+    start_time = time.time()
+    create_rt_table(cursor)
+    print("Created rtMatrix table in " + str(time.time() - start_time) + "s")
+    print("Creating rtMatrix table.....")
+    start_time = time.time()
+    create_tp_table(cursor)
+    print("Created tpMatrix table in " + str(time.time() - start_time) + "s")
 
 def create_user_table(cursor):
     create_query = "CREATE TABLE IF NOT EXISTS USERS(" \
@@ -55,10 +62,53 @@ def create_ws_table(cursor):
                   "service_provider, ip_address, country, ip_no, autonomous_systems, lat, " \
                   "long from webservices_temp);" \
                   "DROP TABLE webservices_temp;" \
-                  "ALTER TABLE webservices add category VARCHAR(100)" \
-                  "ALTER TABLE webservices" \
+                  "ALTER TABLE webservices add category VARCHAR(100);" \
+                  "ALTER TABLE webservices " \
                   "ALTER COLUMN long TYPE float USING NULLIF(long, 'null')::float;" \
-                  "ALTER TABLE webservices" \
+                  "ALTER TABLE webservices " \
                   "ALTER COLUMN lat TYPE float USING NULLIF(lat, 'null')::float;"
 
     cursor.execute(alter_query)
+
+
+def create_rt_table(cursor):
+    create_query = "CREATE TABLE IF NOT EXISTS rtMatrix(" \
+                   "user_id INT REFERENCES users(user_id)," \
+                   "service_id INT REFERENCES webservices(service_id)," \
+                   "response_time FLOAT," \
+                   "PRIMARY KEY(user_id, service_id))"
+    cursor.execute(create_query)
+
+    f = open(cwd + '/rtMatrix.txt', 'r')
+    lines = f.readlines()
+    values = []
+    for user_id in range(0, len(lines)):
+        line = lines[user_id].strip().split('\t')
+        for service_id in range(0, len(line)):
+            if service_id == 4700 or service_id == 4701:
+                continue
+            values.append([user_id, service_id, line[service_id]])
+    args_str = ','.join(cursor.mogrify("(%s,%s,%s)", x).decode("utf-8") for x in values)
+    cursor.execute("INSERT INTO rtMatrix VALUES " + args_str)
+
+
+
+def create_tp_table(cursor):
+    create_query = "CREATE TABLE IF NOT EXISTS tpMatrix(" \
+                   "user_id INT REFERENCES users(user_id)," \
+                   "service_id INT REFERENCES webservices(service_id)," \
+                   "throughput FLOAT," \
+                   "PRIMARY KEY(user_id, service_id))"
+    cursor.execute(create_query)
+
+    f = open(cwd + '/tpMatrix.txt', 'r')
+    lines = f.readlines()
+    values = []
+    for user_id in range(0, len(lines)):
+        line = lines[user_id].strip().split('\t')
+        for service_id in range(0, len(line)):
+            if service_id == 4700 or service_id == 4701:
+                continue
+            values.append([user_id, service_id, line[service_id]])
+    args_str = ','.join(cursor.mogrify("(%s,%s,%s)", x).decode("utf-8") for x in values)
+    cursor.execute("INSERT INTO tpMatrix VALUES " + args_str)
