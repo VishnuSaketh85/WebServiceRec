@@ -1,6 +1,6 @@
 import psycopg2
 
-from CreateDB.createDB import create_db
+from CreateDB.createDB import insert_data
 
 
 def main():
@@ -15,12 +15,12 @@ def main():
     #                               port=port,
     #                               database=database)
     connection = psycopg2.connect(user="postgres",
-                                  password='Slayer@45',
+                                  password='postgres',
                                   host="127.0.0.1",
                                   port="5432",
-                                  database="vishnusaketh")
+                                  database="webservicerecommendation")
     cursor = connection.cursor()
-    create_db(cursor)
+    insert_data(cursor)
     connection.commit()
 
 

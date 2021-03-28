@@ -1,0 +1,155 @@
+{
+    "Sports": [
+      "stadium",
+      "game",
+      "score",
+      "golf",
+      "soccer",
+      "sport",
+      "racing",
+      "tab.com.au"
+    ],
+    "Business": [
+      "buy",
+      "microsoft",
+      "solutions",
+      "business",
+      "product",
+      ".biz",
+      "ecommerce",
+      "industry",
+      "enterprise",
+      "profit",
+      "buy",
+      "pjgoldhomes.com",
+      "realestate",
+      "panasonic",
+      "easyjet"
+    ],
+    "Microsoft": [
+      "microsoft"
+    ],
+    "Education": [
+      "academic",
+      "edu",
+      "ubc.ca",
+      "sd76.ab.ca",
+      "univ",
+      "study",
+      "bauakademie.at",
+      "nafsa.org",
+      "dotnet.jku.at",
+      "syllabus",
+      "harvard",
+      "purdue",
+      "training",
+      "napier.ac.uk"
+    ],
+    "Location": [
+      "location",
+      "satellite",
+      "geo",
+      "state",
+      "zip",
+      "city",
+      "country",
+      "earth",
+      "map",
+      "distance",
+      "weather"
+    ],
+    "Security": [
+      "authentication",
+      "barcode",
+      "security"
+    ],
+    "Travel": [
+      "hotel",
+      "godo.com.au",
+      "trip",
+      "bedandbreak",
+      "vacation",
+      "travel",
+      "room",
+      "australia",
+      "visit",
+      "easyjet",
+      "holiday",
+      "vacation",
+      "tourism"
+    ],
+    "Transport": [
+      "fuel",
+      "subaru.com.au",
+      "transport"
+    ],
+    "Communication": [
+      "connect",
+      "phone",
+      "iphone",
+      "sim",
+      "email",
+      "contact",
+      "sms",
+      "message",
+      "wireless",
+      "mobile",
+      "blackberry",
+      "communi"
+    ],
+    "Entertainment": [
+      "cinema",
+      "audio",
+      "music",
+      "video",
+      "gallery",
+      "media",
+      "cineplex",
+      "jukebox",
+      "movie",
+      "mp3"
+    ],
+    "Finance": [
+      "stock",
+      "currency",
+      "gold",
+      "money",
+      "cost",
+      "sell",
+      "profit",
+      "pay",
+      "finance"
+    ],
+    "Govt": [
+      "gov"
+    ],
+    "Electronic": [
+      "electronic"
+    ],
+    "General": [
+      "lists",
+      "blog",
+      "library",
+      "health",
+      "wiki",
+      "news",
+      "house",
+      "biomoby.org",
+      "shop"
+    ],
+    "People": [
+      "people",
+      "customer",
+      "user",
+      "profile",
+      "relationship",
+      "job",
+      "account"
+    ],
+    "Social": [
+      "social"
+    ],
+    "AutoComplete": [
+      "autocomplete"
+    ]
+}

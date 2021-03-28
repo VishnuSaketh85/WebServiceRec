@@ -1,20 +1,25 @@
+import json
 import os
 import time
 
 cwd = os.getcwd()
 
 
-def create_db(cursor):
+def insert_data(cursor):
+    # dropTables(cursor)
+    print("Creating user table....")
     create_user_table(cursor)
-
+    print("Creating web service table....")
     create_ws_table(cursor)
+    print("Updating the webservice table....")
+    update_ws_table(cursor)
 
     print("Creating rtMatrix table.....")
     start_time = time.time()
     create_rt_table(cursor)
     print("Created rtMatrix table in " + str(time.time() - start_time) + "s")
 
-    print("Creating rtMatrix table.....")
+    print("Creating tpMatrix table.....")
     start_time = time.time()
     create_tp_table(cursor)
     print("Created tpMatrix table in " + str(time.time() - start_time) + "s")
@@ -28,6 +33,15 @@ def create_db(cursor):
     start_time = time.time()
     create_tp_sliced_table(cursor)
     print("Created tp_sliced table in " + str(time.time() - start_time) + "s")
+    print("Done!")
+
+
+def dropTables(cursor):
+    tables = ["USERS", "WebServices_temp", "WebService", "rtMatrix", "tpMatrix", "rt_sliced", "tp_sliced"]
+    for table in tables[::-1]:
+        drop_sql = "DROP TABLE IF EXISTS " + table + ";"
+        print("Dropping", table)
+        cursor.execute(drop_sql)
 
 
 def create_user_table(cursor):
@@ -156,3 +170,24 @@ def create_tp_sliced_table(cursor):
                  "FROM '" + cwd + "/tp_sliced.csv'" \
                                   "DELIMITER ',';"
     cursor.execute(copy_query)
+
+
+def update_ws_table(cursor):
+    with open("categories.json", 'r') as file:
+        categories = json.loads(file.read())
+
+    cursor.execute("SELECT * from webservices;")
+
+    for row in cursor.fetchall():
+        wsdl_address = row[1]
+
+        wsdl_cat = []
+        for key, values in categories.items():
+            for v in values:
+                if v in wsdl_address.lower():
+                    wsdl_cat.append(key)
+
+        if len(wsdl_cat) == 0:
+            wsdl_cat.append("Other Category")
+
+        cursor.execute("UPDATE webservices SET category = %s WHERE service_id = %s;", (wsdl_cat, row[0]))
