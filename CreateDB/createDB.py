@@ -5,11 +5,14 @@ cwd = os.getcwd()
 
 def create_db(cursor):
     create_user_table(cursor)
+
     create_ws_table(cursor)
+
     print("Creating rtMatrix table.....")
     start_time = time.time()
     create_rt_table(cursor)
     print("Created rtMatrix table in " + str(time.time() - start_time) + "s")
+
     print("Creating rtMatrix table.....")
     start_time = time.time()
     create_tp_table(cursor)
