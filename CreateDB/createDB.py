@@ -1,5 +1,6 @@
 import os
 import time
+
 cwd = os.getcwd()
 
 
@@ -17,6 +18,17 @@ def create_db(cursor):
     start_time = time.time()
     create_tp_table(cursor)
     print("Created tpMatrix table in " + str(time.time() - start_time) + "s")
+
+    print("Creating rt_sliced table.....")
+    start_time = time.time()
+    create_rt_sliced_table(cursor)
+    print("Created rt_sliced table in " + str(time.time() - start_time) + "s")
+
+    print("Creating tp_sliced table.....")
+    start_time = time.time()
+    create_tp_sliced_table(cursor)
+    print("Created tp_sliced table in " + str(time.time() - start_time) + "s")
+
 
 def create_user_table(cursor):
     create_query = "CREATE TABLE IF NOT EXISTS USERS(" \
@@ -95,7 +107,6 @@ def create_rt_table(cursor):
     cursor.execute("INSERT INTO rtMatrix VALUES " + args_str)
 
 
-
 def create_tp_table(cursor):
     create_query = "CREATE TABLE IF NOT EXISTS tpMatrix(" \
                    "user_id INT REFERENCES users(user_id)," \
@@ -115,3 +126,33 @@ def create_tp_table(cursor):
             values.append([user_id, service_id, line[service_id]])
     args_str = ','.join(cursor.mogrify("(%s,%s,%s)", x).decode("utf-8") for x in values)
     cursor.execute("INSERT INTO tpMatrix VALUES " + args_str)
+
+
+def create_rt_sliced_table(cursor):
+    create_query = "CREATE TABLE IF NOT EXISTS rt_sliced(" \
+                   "user_id INT REFERENCES users(user_id)," \
+                   "service_id INT REFERENCES webservices(service_id)," \
+                   "timeslice_id INT," \
+                   "response_time FLOAT," \
+                   "PRIMARY KEY(user_id, service_id, timeslice_id));"
+    cursor.execute(create_query)
+
+    copy_query = "COPY rt_sliced " \
+                 "FROM '" + cwd + "/rt_sliced.csv'" \
+                 "DELIMITER ',';"
+    cursor.execute(copy_query)
+
+
+def create_tp_sliced_table(cursor):
+    create_query = "CREATE TABLE IF NOT EXISTS tp_sliced(" \
+                   "user_id INT REFERENCES users(user_id)," \
+                   "service_id INT REFERENCES webservices(service_id)," \
+                   "timeslice_id INT," \
+                   "throughput FLOAT," \
+                   "PRIMARY KEY(user_id, service_id, timeslice_id));"
+    cursor.execute(create_query)
+
+    copy_query = "COPY tp_sliced " \
+                 "FROM '" + cwd + "/tp_sliced.csv'" \
+                                  "DELIMITER ',';"
+    cursor.execute(copy_query)
