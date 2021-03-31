@@ -6,7 +6,7 @@ cwd = os.getcwd()
 
 
 def insert_data(cursor):
-    # dropTables(cursor)
+    dropTables(cursor)
     print("Creating user table....")
     create_user_table(cursor)
     print("Creating web service table....")
@@ -91,7 +91,7 @@ def create_ws_table(cursor):
                   "service_provider, ip_address, country, ip_no, autonomous_systems, lat, " \
                   "long from webservices_temp);" \
                   "DROP TABLE webservices_temp;" \
-                  "ALTER TABLE webservices add category VARCHAR(100);" \
+                  "ALTER TABLE webservices add category TEXT[];" \
                   "ALTER TABLE webservices " \
                   "ALTER COLUMN long TYPE float USING NULLIF(long, 'null')::float;" \
                   "ALTER TABLE webservices " \
