@@ -22,7 +22,7 @@ def main():
                                   database="vishnusaketh")
     cursor = connection.cursor()
     get_similarity_matrix(cursor)
-    get_time_aware_Qos_prediction(cursor)
+    # get_time_aware_Qos_prediction(cursor)
 
 
 if __name__ == "__main__":

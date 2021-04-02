@@ -28,6 +28,7 @@ def get_similarity_matrix(cursor):
     serviceRtAvg = data[['Service ID', 'response_time']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
     computeSimilarityMatrix(dic=userServiceDictRt, user_flag=True, qos_avg=userRtAvg, t_current=tb_current,
                             alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct)
+
     print("Similarity Computation done")
 
 
@@ -51,6 +52,9 @@ def computeSimilarityMatrix(dic, user_flag, qos_avg, t_current, alpha, beta, QOS
                                                  beta, servicect, userct)
             qos_matrix[id2][id1] = qos_matrix[id1][id2]
     pickle.dump(qos_matrix, open(str_name + "_similarity_matrix_" + QOS_type + ".p", "wb"))
+    for i in range(len(qos_matrix)):
+        for j in range(len(qos_matrix[i])):
+            print(qos_matrix[i][j])
     return qos_matrix
 
 
