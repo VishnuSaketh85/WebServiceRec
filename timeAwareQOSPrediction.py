@@ -79,14 +79,8 @@ def time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_coun
     return qos_matrix
 
 
-def main():
+def get_time_aware_Qos_prediction(cursor):
 
-    connection = psycopg2.connect(user="postgres",
-                                  password='postgres',
-                                  host="127.0.0.1",
-                                  port="5432",
-                                  database="webservicerecommendation")
-    cursor = connection.cursor()
     user_sim_matrix_res = open_pickle("./user_similarity_matrix_Response_Time.p")
     service_category = 'Entertainment'
     user_country = 'United States'
@@ -95,5 +89,3 @@ def main():
     qos_matrix_tp = time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_country, "Throughput")
 
 
-if __name__ == '__main__':
-    main()
