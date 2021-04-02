@@ -184,7 +184,7 @@ def get_final_qos_values():
     pass
 
 
-def get_time_aware_Qos_prediction(cursor, service_category="Entertainment", user_country='United States'):
+def get_time_aware_Qos_prediction(cursor, service_category="Sports", user_country='United States'):
 
     # THESE SHOULD BE FROM THE O/P of SIMILARITY MATRIX.. hardcoding it for now..
     user_sim_matrix_res = open_pickle("./user_similarity_matrix_Response_Time.p")

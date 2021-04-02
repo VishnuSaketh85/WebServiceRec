@@ -2,6 +2,8 @@ import psycopg2
 
 from userSimilarity import get_similarity_matrix
 from timeAwareQOSPrediction import get_time_aware_Qos_prediction
+
+
 def main():
     # username = input("Enter the user name : ")
     # password = input("Enter the password : ")
@@ -22,3 +24,6 @@ def main():
     get_similarity_matrix(cursor)
     get_time_aware_Qos_prediction(cursor)
 
+
+if __name__ == "__main__":
+    main()

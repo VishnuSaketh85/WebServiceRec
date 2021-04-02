@@ -7,12 +7,11 @@ from tqdm import tqdm
 import psycopg2
 
 
-
 def get_similarity_matrix(cursor):
     query = """select t3.user_id, t3.service_id, t3.timeslice_id, t3.response_time from 
                 (select user_id from users where country = 'United States')t4 
-                left join (select t1.user_id, t1.service_id, t1.timeslice_id, t1.response_time
-                from rt_sliced t1 right join (SELECT service_id FROM webservices 
+                join (select t1.user_id, t1.service_id, t1.timeslice_id, t1.response_time
+                from rt_sliced t1 join (SELECT service_id FROM webservices 
                 where 'Sports' = ANY(category))t2 on t1.service_id
                 = t2.service_id)t3 on t4.user_id = t3.user_id
                 ORDER BY t3.user_id, t3.service_id, t3.timeslice_id;"""
@@ -23,11 +22,13 @@ def get_similarity_matrix(cursor):
 
     userct = data['User ID'].nunique()
     servicect = data['Service ID'].nunique()
+    print(userct, servicect)
     tb_current = max(data['Timeslice Id'].max(), data['Timeslice Id'].max())
-    userRtAvg = data[['User ID', 'response_time']].groupby(['User ID']).agg('mean').to_numpy()[:,0]
+    userRtAvg = data[['User ID', 'response_time']].groupby(['User ID']).agg('mean').to_numpy()[:, 0]
     serviceRtAvg = data[['Service ID', 'response_time']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
     computeSimilarityMatrix(dic=userServiceDictRt, user_flag=True, qos_avg=userRtAvg, t_current=tb_current,
                             alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct)
+    print("Similarity Computation done")
 
 
 def computeSimilarityMatrix(dic, user_flag, qos_avg, t_current, alpha, beta, QOS_type, userct, servicect):
@@ -47,17 +48,17 @@ def computeSimilarityMatrix(dic, user_flag, qos_avg, t_current, alpha, beta, QOS
         id1, id2 = cartesian[idx][0], cartesian[idx][1]
         if id1 < id2:
             qos_matrix[id1][id2] = getSimilarity(dic, user_flag, id1, id2, qos_avg[id1], qos_avg[id2], t_current, alpha,
-                                                 beta)
+                                                 beta, servicect, userct)
             qos_matrix[id2][id1] = qos_matrix[id1][id2]
     pickle.dump(qos_matrix, open(str_name + "_similarity_matrix_" + QOS_type + ".p", "wb"))
     return qos_matrix
 
 
-def getSimilarity(dic, user_flag, id1, id2, q_avg1, q_avg2, t_current, alpha, beta):
+def getSimilarity(dic, user_flag, id1, id2, q_avg1, q_avg2, t_current, alpha, beta, servicect, userct):
     if user_flag:
-        common_item1, common_item2, unique_ct1, unique_ct2 = getCoInvokedServices(dic, id1, id2)
+        common_item1, common_item2, unique_ct1, unique_ct2 = getCoInvokedServices(dic, id1, id2, servicect=servicect)
     else:
-        common_item1, common_item2, unique_ct1, unique_ct2 = getCommonUsers(dic, id1, id2)
+        common_item1, common_item2, unique_ct1, unique_ct2 = getCommonUsers(dic, id1, id2, userct=userct)
 
     commonality = len(common_item1)
 
@@ -80,7 +81,7 @@ def getSimilarity(dic, user_flag, id1, id2, q_avg1, q_avg2, t_current, alpha, be
     return w
 
 
-def getCommonUsers(dic, serv1, serv2):
+def getCommonUsers(dic, serv1, serv2, userct):
     users1 = []
     users2 = []
 
@@ -100,7 +101,7 @@ def getCommonUsers(dic, serv1, serv2):
     return users1, users2, users1_unique_ct, users2_unique_ct
 
 
-def getCoInvokedServices(dic, uid1, uid2):
+def getCoInvokedServices(dic, uid1, uid2, servicect):
     services1 = []
     services2 = []
 
