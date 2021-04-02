@@ -20,8 +20,11 @@ def main():
                                   host="127.0.0.1",
                                   port="5432",
                                   database="vishnusaketh")
+
+    location = input("Enter user location : ")
+    category = input("Enter service category : ")
     cursor = connection.cursor()
-    get_similarity_matrix(cursor)
+    get_similarity_matrix(cursor, location, category)
     # get_time_aware_Qos_prediction(cursor)
 
 

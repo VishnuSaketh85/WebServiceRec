@@ -7,27 +7,53 @@ from tqdm import tqdm
 import psycopg2
 
 
-def get_similarity_matrix(cursor):
-    query = """select t3.user_id, t3.service_id, t3.timeslice_id, t3.response_time from 
+def get_similarity_matrix(cursor, location, category):
+    user_response_time_query = """select t3.user_id, t3.service_id, t3.timeslice_id, t3.response_time from 
                 (select user_id from users where country = 'United States')t4 
                 join (select t1.user_id, t1.service_id, t1.timeslice_id, t1.response_time
                 from rt_sliced t1 join (SELECT service_id FROM webservices 
                 where 'Sports' = ANY(category))t2 on t1.service_id
                 = t2.service_id)t3 on t4.user_id = t3.user_id
                 ORDER BY t3.user_id, t3.service_id, t3.timeslice_id;"""
-    cursor.execute(query)
-    data = pd.DataFrame(cursor.fetchall(), columns=["User ID", "Service ID", "Timeslice Id", "response_time"])
-    userServiceDictRt = data.groupby(['User ID', 'Service ID']).apply(
+    user_throughput_query = """select t3.user_id, t3.service_id, t3.timeslice_id, t3.throughput from 
+                (select user_id from users where country = 'United States')t4 
+                join (select t1.user_id, t1.service_id, t1.timeslice_id, t1.throughput
+                from tp_sliced t1 join (SELECT service_id FROM webservices 
+                where 'Sports' = ANY(category))t2 on t1.service_id
+                = t2.service_id)t3 on t4.user_id = t3.user_id
+                ORDER BY t3.user_id, t3.service_id, t3.timeslice_id;"""
+    cursor.execute(user_response_time_query)
+    rt_data = pd.DataFrame(cursor.fetchall(), columns=["User ID", "Service ID", "Timeslice Id", "response_time"])
+    userServiceDictRt = rt_data.groupby(['User ID', 'Service ID']).apply(
         func=lambda x: x[['Timeslice Id', 'response_time']].to_numpy()).to_dict()
 
-    userct = data['User ID'].nunique()
-    servicect = data['Service ID'].nunique()
+    cursor.execute(user_throughput_query)
+    tp_data = pd.DataFrame(cursor.fetchall(), columns=["User ID", "Service ID", "Timeslice Id", "throughput"])
+    userServiceDictTp = rt_data.groupby(['User ID', 'Service ID']).apply(
+        func=lambda x: x[['Timeslice Id', 'response_time']].to_numpy()).to_dict()
+
+    userct = rt_data['User ID'].nunique()
+    servicect = rt_data['Service ID'].nunique()
     print(userct, servicect)
-    tb_current = max(data['Timeslice Id'].max(), data['Timeslice Id'].max())
-    userRtAvg = data[['User ID', 'response_time']].groupby(['User ID']).agg('mean').to_numpy()[:, 0]
-    serviceRtAvg = data[['Service ID', 'response_time']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
+    tb_current = max(rt_data['Timeslice Id'].max(), rt_data['Timeslice Id'].max())
+    userRtAvg = rt_data[['User ID', 'response_time']].groupby(['User ID']).agg('mean').to_numpy()[:, 0]
+    serviceRtAvg = rt_data[['Service ID', 'response_time']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
     computeSimilarityMatrix(dic=userServiceDictRt, user_flag=True, qos_avg=userRtAvg, t_current=tb_current,
                             alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct)
+    computeSimilarityMatrix(dic=userServiceDictRt, user_flag=False, qos_avg=serviceRtAvg, t_current=tb_current,
+                            alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct)
+
+    userct = tp_data['User ID'].nunique()
+    servicect = tp_data['Service ID'].nunique()
+    print(userct, servicect)
+    tb_current = max(rt_data['Timeslice Id'].max(), rt_data['Timeslice Id'].max())
+    userTpAvg = tp_data[['User ID', 'throughput']].groupby(['User ID']).agg('mean').to_numpy()[:, 0]
+    serviceTpAvg = tp_data[['Service ID', 'throughput']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
+    computeSimilarityMatrix(dic=userServiceDictTp, user_flag=True, qos_avg=userTpAvg, t_current=tb_current,
+                            alpha=1, beta=1, QOS_type="throughput", servicect=servicect, userct=userct)
+    computeSimilarityMatrix(dic=userServiceDictTp, user_flag=False, qos_avg=serviceTpAvg, t_current=tb_current,
+                            alpha=1, beta=1, QOS_type="throughput", servicect=servicect, userct=userct)
+
 
     print("Similarity Computation done")
 
@@ -52,9 +78,6 @@ def computeSimilarityMatrix(dic, user_flag, qos_avg, t_current, alpha, beta, QOS
                                                  beta, servicect, userct)
             qos_matrix[id2][id1] = qos_matrix[id1][id2]
     pickle.dump(qos_matrix, open(str_name + "_similarity_matrix_" + QOS_type + ".p", "wb"))
-    for i in range(len(qos_matrix)):
-        for j in range(len(qos_matrix[i])):
-            print(qos_matrix[i][j])
     return qos_matrix
 
 

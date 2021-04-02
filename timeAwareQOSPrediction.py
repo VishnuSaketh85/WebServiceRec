@@ -75,7 +75,6 @@ def time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_coun
 
                 numerator += (qos_sim_j * (np.sum((time_factor_f3 * qos_j_k)) / j_user.shape[0]))
                 denominator += (qos_sim_j * (np.sum(time_factor_f3) / j_user.shape[0]))
-
             frac = (numerator / denominator)
             qos_matrix[idx][idx_s] = qos_i + frac
 
@@ -187,10 +186,10 @@ def get_final_qos_values():
 def get_time_aware_Qos_prediction(cursor, service_category="Sports", user_country='United States'):
 
     # THESE SHOULD BE FROM THE O/P of SIMILARITY MATRIX.. hardcoding it for now..
-    user_sim_matrix_res = open_pickle("./user_similarity_matrix_Response_Time.p")
-    user_sim_matrix_tp = []
-    service_sim_matrix_rt = []
-    service_sim_matrix_tp = []
+    user_sim_matrix_res = open_pickle("./user_similarity_matrix_response_time.p")
+    user_sim_matrix_tp = open_pickle("./user_similarity_matrix_throughput.p")
+    service_sim_matrix_rt = open_pickle("./service_similarity_matrix_response_time.p")
+    service_sim_matrix_tp = open_pickle("./service_similarity_matrix_throughput.p")
 
     # Time aware qos user
     qos_matrix_u_rt = time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_country, "Response Time")
