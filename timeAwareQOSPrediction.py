@@ -1,6 +1,5 @@
 import pickle
 import numpy as np
-import psycopg2
 import pandas as pd
 
 
@@ -149,18 +148,66 @@ def time_aware_qos_service(cursor, service_sim_matrix, service_category, user_co
     return qos_matrix
 
 
+def calculate_confidence_weights(sim_matrix):
+    if len(sim_matrix) == 0:
+        return 0
+    conf = np.apply_along_axis(lambda x: np.sum(np.square(x) / np.sum(x)), axis=1, arr=sim_matrix)
+    return np.sum(conf)
+
+
+def get_prediction_weights_user(confidence_weight_user, confidence_weight_service, l=0.085):
+    x = l * confidence_weight_user
+    return x / (x + (1 - l) * confidence_weight_service)
+
+
+def get_prediction_weights_service(confidence_weight_user, confidence_weight_service, l=0.085):
+    x = (1 - l) * confidence_weight_service
+    return x / (x + (l * confidence_weight_user))
+
+
+def get_prediction_weights(user_sim_matrix_rt, user_sim_matrix_tp, service_sim_matrix_rt, service_sim_matrix_tp):
+    # Calculate confidence weights
+    conf_u_rt = calculate_confidence_weights(user_sim_matrix_rt)
+    conf_u_tp = calculate_confidence_weights(user_sim_matrix_tp)
+    conf_s_rt = calculate_confidence_weights(service_sim_matrix_rt)
+    conf_s_tp = calculate_confidence_weights(service_sim_matrix_tp)
+
+    # Calculate prediction weights
+    pred_wt_u_rt = get_prediction_weights_user(conf_u_rt, conf_s_rt)
+    pred_wt_u_tp = get_prediction_weights_user(conf_u_tp, conf_s_tp)
+    pred_wt_s_rt = get_prediction_weights_service(conf_u_rt, conf_s_rt)
+    pred_wt_s_tp = get_prediction_weights_service(conf_u_tp, conf_s_tp)
+    return pred_wt_u_rt, pred_wt_u_tp, pred_wt_s_rt, pred_wt_s_tp
+
+
+def get_final_qos_values():
+    pass
+
+
 def get_time_aware_Qos_prediction(cursor, service_category="Entertainment", user_country='United States'):
 
     # THESE SHOULD BE FROM THE O/P of SIMILARITY MATRIX.. hardcoding it for now..
     user_sim_matrix_res = open_pickle("./user_similarity_matrix_Response_Time.p")
-    service_sim_matrix = []
+    user_sim_matrix_tp = []
+    service_sim_matrix_rt = []
+    service_sim_matrix_tp = []
 
-    # Time aware user qos
+    # Time aware qos user
     qos_matrix_u_rt = time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_country, "Response Time")
-    qos_matrix_u_tp = time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_country, "Throughput")
+    qos_matrix_u_tp = time_aware_qos_user(cursor, user_sim_matrix_tp, service_category, user_country, "Throughput")
 
-    # Time aware service
-    qos_matrix_s_tp = time_aware_qos_service(cursor, service_sim_matrix, service_category, user_country, "Response Time")
-    qos_matrix_s_tp = time_aware_qos_service(cursor, service_sim_matrix, service_category, user_country, "Throughput")
+    # Time aware qos service
+    qos_matrix_s_tp = time_aware_qos_service(cursor, service_sim_matrix_rt, service_category, user_country, "Response Time")
+    qos_matrix_s_tp = time_aware_qos_service(cursor, service_sim_matrix_tp, service_category, user_country, "Throughput")
+
+    # Calculate prediction weights for final QOS value predictions
+    pred_wt_u_rt, pred_wt_u_tp, pred_wt_s_rt, pred_wt_s_tp = get_prediction_weights(user_sim_matrix_res,
+                                                                                    user_sim_matrix_tp,
+                                                                                    service_sim_matrix_rt,
+                                                                                    service_sim_matrix_tp)
+
+
+
+
 
 
