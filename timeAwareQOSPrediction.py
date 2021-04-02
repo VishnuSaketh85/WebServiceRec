@@ -201,8 +201,8 @@ def get_final_qos_values(qos_matrix_u_rt, qos_matrix_u_tp, qos_matrix_s_rt, qos_
 
     for i in range(user_ct):
         for k in range(service_ct):
-            qos[i][k] = ((qos_matrix_u_rt[i][k] * pred_wt_u_rt) + (qos_matrix_u_tp[i][k] * pred_wt_u_tp)) + \
-                        ((qos_matrix_s_rt[i][k] * pred_wt_s_rt) + (qos_matrix_s_tp[i][k] * pred_wt_s_tp))
+            qos[i][k] = ((qos_matrix_u_rt[i][k] * pred_wt_u_rt) + (qos_matrix_s_rt[i][k] * pred_wt_s_rt)) + \
+                        ((qos_matrix_u_tp[i][k] * pred_wt_u_tp) + (qos_matrix_s_tp[i][k] * pred_wt_s_tp))
 
     return qos
 
