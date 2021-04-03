@@ -9,17 +9,17 @@ import psycopg2
 
 def get_similarity_matrix(cursor, location, category):
     user_response_time_query = """select t3.user_id, t3.service_id, t3.timeslice_id, t3.response_time from 
-                (select user_id from users where country = 'United States')t4 
+                (select user_id from users where country = '""" + location + """')t4 
                 join (select t1.user_id, t1.service_id, t1.timeslice_id, t1.response_time
                 from rt_sliced t1 join (SELECT service_id FROM webservices 
-                where 'Sports' = ANY(category))t2 on t1.service_id
+                where '""" + category + """' = ANY(category))t2 on t1.service_id
                 = t2.service_id)t3 on t4.user_id = t3.user_id
                 ORDER BY t3.user_id, t3.service_id, t3.timeslice_id;"""
     user_throughput_query = """select t3.user_id, t3.service_id, t3.timeslice_id, t3.throughput from 
-                (select user_id from users where country = 'United States')t4 
+                (select user_id from users where country = '""" + location + """')t4 
                 join (select t1.user_id, t1.service_id, t1.timeslice_id, t1.throughput
                 from tp_sliced t1 join (SELECT service_id FROM webservices 
-                where 'Sports' = ANY(category))t2 on t1.service_id
+                where '""" + category + """' = ANY(category))t2 on t1.service_id
                 = t2.service_id)t3 on t4.user_id = t3.user_id
                 ORDER BY t3.user_id, t3.service_id, t3.timeslice_id;"""
     cursor.execute(user_response_time_query)
