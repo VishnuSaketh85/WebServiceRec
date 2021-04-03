@@ -36,7 +36,7 @@ In this approach, we use the [WS-dream dataset](https://github.com/wsdream/wsdre
 
 #### Tasks in Progress:
 - As of now, we have predicted the QOS values for the given user. In the next phase, we plan to use these predicted QOS values to recommend web services to the user in the specified category.
-
+- Also, we plan to add a User Interface to take in inputs from the user: `User Location` and `Service Category`
 
 #### References:
 [1] Y. Hu, Q. Peng, X. Hu, and R. Yang. Time aware anddata sparsity tolerant web service recommendationbased on improved collaborative filtering.IEEETransactions on Services Computing, 8(5):782–794,2015
