@@ -12,6 +12,7 @@ In this approach, we use the [WS-dream dataset](https://github.com/wsdream/wsdre
 - pandas
 - tqdm
 - pickle
+- matplotlib
 
 #### Steps to run the program:
 ##### Insert Data into PostgreSQL:
@@ -25,8 +26,10 @@ In this approach, we use the [WS-dream dataset](https://github.com/wsdream/wsdre
 - Replace the username and password with PostgreSQL username and password.
 - Change the db name to `webservicerecommendation`
 - Run `python3 main.py`
+- Enter User Location and Service Category
 
 #### Tasks in Progress:
+- As of now, we have predicted the QOS values for the given user. In the next phase, we plan to use these predicted QOS values to recommend web services to the user in the specified category.
 
 
 #### References:
