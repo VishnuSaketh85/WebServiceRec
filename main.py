@@ -16,13 +16,13 @@ def main():
     #                               port=port,
     #                               database=database)
     connection = psycopg2.connect(user="postgres",
-                                  password='postgres',
+                                  password='Slayer@45',
                                   host="127.0.0.1",
                                   port="5432",
-                                  database="webservicerecommendation")
+                                  database="vishnusaketh")
 
-    location = input("Enter user location : ")
-    category = input("Enter service category : ")
+    location = input("Enter user location : ").strip()
+    category = input("Enter service category : ").strip()
     cursor = connection.cursor()
     get_similarity_matrix(cursor, location, category)
     get_time_aware_Qos_prediction(cursor, user_country=location, service_category=category)
