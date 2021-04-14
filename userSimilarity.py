@@ -81,11 +81,14 @@ def computeSimilarityMatrix(dic, user_flag, qos_avg, t_current, alpha, beta, QOS
                                                  beta, servicect, userct)
             qos_matrix[id2][id1] = qos_matrix[id1][id2]
 
-    s_user_id = random_walk(qos_matrix, 1)
-    qos_matrix = []
-    for i in range(len(s_user_id)):
-        qos_matrix.append((ids[i], s_user_id[i]))
-    pickle.dump(s_user_id, open(str_name + "_similarity_matrix_" + QOS_type + ".p", "wb"))
+    qos_matrix = random_walk(qos_matrix, 1, user_flag)
+    if user_flag:
+        s_user_id = []
+        for i in range(len(qos_matrix)):
+            s_user_id.append((ids[i], qos_matrix[i]))
+        qos_matrix = s_user_id
+    pickle.dump(qos_matrix, open(str_name + "_similarity_matrix_" + QOS_type + ".p", "wb"))
+
     return qos_matrix
 
 
@@ -184,7 +187,8 @@ def getSingleItemCalculations(qos1, qos2, q_avg1, q_avg2, t_current, alpha, beta
     return num1, den1, den2
 
 
-def random_walk(qos_matrix, user_id):
+def random_walk(qos_matrix, user_id, user_flag):
+    original_qos_matrix = qos_matrix
     row_ct = qos_matrix.shape[0]
     col_ct = qos_matrix.shape[1]
     for i in range(row_ct):
@@ -206,20 +210,39 @@ def random_walk(qos_matrix, user_id):
 
     inverse_matrix = (1 - d) * np.linalg.inv(I - (d * qos_matrix))
 
-    p = np.array([0] * col_ct)
-    p[user_id] = 1
+    if user_flag:
+        p = np.array([0] * col_ct)
+        p[user_id] = 1
 
-    r = np.matmul(inverse_matrix, np.transpose(p))
+        r = np.matmul(inverse_matrix, np.transpose(p))
+        k = 0
+        summation = 0
+        top_k = []
+        for j in range(col_ct):
+            if qos_matrix[user_id, j] > 0:
+                k += 1
+                top_k.append(j)
+                summation += (qos_matrix[user_id, j] / r[j])
+        s_user_id = (summation / k) * np.transpose(r)
+        return s_user_id
 
-    k = 0
-    summation = 0
-    top_k = []
-    for j in range(col_ct):
-        if qos_matrix[user_id, j] > 0:
-            k += 1
-            top_k.append(j)
-            summation += (qos_matrix[user_id, j] / r[j])
+    else:
+        r = np.transpose(inverse_matrix)
+        for i in range(row_ct):
+            k = 0
+            summation = 0
+            top_k = []
+            for j in range(col_ct):
+                if original_qos_matrix[i, j] > 0:
+                    k += 1
+                    top_k.append(j)
+                    summation += (original_qos_matrix[i, j] / r[i, j])
+            for j in range(col_ct):
+                r[i, j] = summation / k * r[i, j]
+        return r
 
-    s_user_id = (summation / k) * np.transpose(r)
 
-    return s_user_id
+
+
+
+
