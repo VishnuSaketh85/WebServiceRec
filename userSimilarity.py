@@ -36,28 +36,32 @@ def get_similarity_matrix(cursor, location, category):
 
     userct = rt_data['User ID'].nunique()
     servicect = rt_data['Service ID'].nunique()
+    user_ids = list(set(rt_data['User ID'].tolist()))
+    service_ids = list(set(rt_data['Service ID'].tolist()))
     tb_current = max(rt_data['Timeslice Id'].max(), rt_data['Timeslice Id'].max())
     userRtAvg = rt_data[['User ID', 'response_time']].groupby(['User ID']).agg('mean').to_numpy()[:, 0]
     serviceRtAvg = rt_data[['Service ID', 'response_time']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
     computeSimilarityMatrix(dic=userServiceDictRt, user_flag=True, qos_avg=userRtAvg, t_current=tb_current,
-                            alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct)
+                            alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct, ids=user_ids)
     computeSimilarityMatrix(dic=userServiceDictRt, user_flag=False, qos_avg=serviceRtAvg, t_current=tb_current,
-                            alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct)
+                            alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct, ids=service_ids)
 
     userct = tp_data['User ID'].nunique()
     servicect = tp_data['Service ID'].nunique()
+    user_ids = list(set(tp_data['User ID'].tolist()))
+    service_ids = list(set(tp_data['Service ID'].tolist()))
     tb_current = max(rt_data['Timeslice Id'].max(), rt_data['Timeslice Id'].max())
     userTpAvg = tp_data[['User ID', 'throughput']].groupby(['User ID']).agg('mean').to_numpy()[:, 0]
     serviceTpAvg = tp_data[['Service ID', 'throughput']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
     computeSimilarityMatrix(dic=userServiceDictTp, user_flag=True, qos_avg=userTpAvg, t_current=tb_current,
-                            alpha=1, beta=1, QOS_type="throughput", servicect=servicect, userct=userct)
+                            alpha=1, beta=1, QOS_type="throughput", servicect=servicect, userct=userct, ids=user_ids)
     computeSimilarityMatrix(dic=userServiceDictTp, user_flag=False, qos_avg=serviceTpAvg, t_current=tb_current,
-                            alpha=1, beta=1, QOS_type="throughput", servicect=servicect, userct=userct)
+                            alpha=1, beta=1, QOS_type="throughput", servicect=servicect, userct=userct, ids=service_ids)
 
     print("Similarity Computation done")
 
 
-def computeSimilarityMatrix(dic, user_flag, qos_avg, t_current, alpha, beta, QOS_type, userct, servicect):
+def computeSimilarityMatrix(dic, user_flag, qos_avg, t_current, alpha, beta, QOS_type, userct, servicect, ids):
     if user_flag:
         ct = userct
         str_name = 'user'
@@ -78,6 +82,9 @@ def computeSimilarityMatrix(dic, user_flag, qos_avg, t_current, alpha, beta, QOS
             qos_matrix[id2][id1] = qos_matrix[id1][id2]
 
     s_user_id = random_walk(qos_matrix, 1)
+    qos_matrix = []
+    for i in range(len(s_user_id)):
+        qos_matrix.append((ids[i], s_user_id[i]))
     pickle.dump(s_user_id, open(str_name + "_similarity_matrix_" + QOS_type + ".p", "wb"))
     return qos_matrix
 
@@ -206,9 +213,11 @@ def random_walk(qos_matrix, user_id):
 
     k = 0
     summation = 0
+    top_k = []
     for j in range(col_ct):
         if qos_matrix[user_id, j] > 0:
             k += 1
+            top_k.append(j)
             summation += (qos_matrix[user_id, j] / r[j])
 
     s_user_id = (summation / k) * np.transpose(r)
