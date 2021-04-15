@@ -19,7 +19,7 @@ def calc_time_factor_service(timeslice, tcurrent=63):
     return np.exp(-gamma * np.abs(tcurrent - timeslice))
 
 
-def time_aware_qos_user(cursor, user_sim_matrix, service_category, user_country, qos_type="Response Time"):
+def time_aware_qos_user(cursor, user_sim_matrix, service_category, user_country, user_id, qos_type="Response Time"):
     SQL_QUERY = ""
     if qos_type == 'Response Time':
         SQL_QUERY = "SELECT R.user_id, W.service_id, R.timeslice_id, R.response_time from webservices W " \
@@ -42,51 +42,50 @@ def time_aware_qos_user(cursor, user_sim_matrix, service_category, user_country,
     response_time_df = pd.DataFrame(cursor.fetchall(), columns=["User Id", "Service Id", "Timeslice Id", qos_type])
 
     rt_agg = response_time_df[['User Id', qos_type]].groupby('User Id').agg('mean')
-    # print(rt_agg)
 
     users = sorted(list(set(response_time_df['User Id'])))
 
     services = sorted(list(set(response_time_df['Service Id'])))
 
-    qos_matrix = np.zeros((len(users), len(services)))
+    qos_matrix = np.zeros(len(services))
 
-    if len(user_sim_matrix) == 0 or len(user_sim_matrix[0]) == 0:
+    if len(user_sim_matrix) == 0:
         return qos_matrix
 
-    for idx, i in tqdm(enumerate(users)):
-        i_serv = response_time_df[response_time_df['User Id'] == i]
-        qos_i = rt_agg[rt_agg.index == i].iloc[0][qos_type]
-        for idx_s, service in enumerate(services):
-            numerator, denominator = 0, 0
-            for j, qos_sim_j in enumerate(user_sim_matrix[idx]):
+    # for idx, i in tqdm(enumerate(users)):
+    i_serv = response_time_df[response_time_df['User Id'] == user_id]
+    qos_i = rt_agg[rt_agg.index == user_id].iloc[0][qos_type]
+    for idx_s, service in enumerate(services):
+        numerator, denominator = 0, 0
+        for j, qos_sim_j in user_sim_matrix:
 
-                # if users are same or QOS value is less than zero or there are no services by user j
-                j_user = response_time_df[(response_time_df['User Id'] == users[j]) &
-                                          (response_time_df['Service Id'] == service)]
-                if i == j or qos_sim_j <= 0 or j_user.empty:
-                    continue
+            # if users are same or QOS value is less than zero or there are no services by user j
+            j_user = response_time_df[(response_time_df['User Id'] == j) &
+                                      (response_time_df['Service Id'] == service)]
+            if user_id == j or qos_sim_j <= 0 or j_user.empty:
+                continue
 
-                # average qos for user j
-                qos_j = rt_agg[rt_agg.index == users[j]]
-                qos_j = qos_j.iloc[0][qos_type]
+            # average qos for user j
+            qos_j = rt_agg[rt_agg.index == j]
+            qos_j = qos_j.iloc[0][qos_type]
 
-                # Calculate time factor f3
-                time_factor_f3 = j_user[qos_type].apply(lambda x: calc_time_factor_user(x))
+            # Calculate time factor f3
+            time_factor_f3 = j_user[qos_type].apply(lambda x: calc_time_factor_user(x))
 
-                qos_j_k = np.abs(j_user[qos_type].subtract(qos_j))
+            qos_j_k = np.abs(j_user[qos_type].subtract(qos_j))
 
-                numerator += (qos_sim_j * (np.sum((time_factor_f3 * qos_j_k)) / j_user.shape[0]))
-                denominator += (qos_sim_j * (np.sum(time_factor_f3) / j_user.shape[0]))
-            frac = 0
-            if denominator != 0:
-                frac = (numerator / denominator)
-            qos_matrix[idx][idx_s] = qos_i + frac
+            numerator += (qos_sim_j * (np.sum((time_factor_f3 * qos_j_k)) / j_user.shape[0]))
+            denominator += (qos_sim_j * (np.sum(time_factor_f3) / j_user.shape[0]))
+        frac = 0
+        if denominator != 0:
+            frac = (numerator / denominator)
+        qos_matrix[idx_s] = qos_i + frac
 
     print("Computed qos for user and", qos_type, ":", qos_matrix.shape)
     return qos_matrix
 
 
-def time_aware_qos_service(cursor, service_sim_matrix, service_category, user_country, qos_type="Response Time"):
+def time_aware_qos_service(cursor, service_sim_matrix, service_category, user_country, user_id, qos_type="Response Time"):
     SQL_QUERY = ""
     if qos_type == 'Response Time':
         SQL_QUERY = "SELECT R.user_id, W.service_id, R.timeslice_id, R.response_time from webservices W " \
@@ -109,7 +108,6 @@ def time_aware_qos_service(cursor, service_sim_matrix, service_category, user_co
     response_time_df = pd.DataFrame(cursor.fetchall(), columns=["User Id", "Service Id", "Timeslice Id", qos_type])
 
     rt_agg = response_time_df[['Service Id', qos_type]].groupby('Service Id').agg('mean')
-    # print(rt_agg)
 
     users = sorted(list(set(response_time_df['User Id'])))
 
@@ -117,8 +115,10 @@ def time_aware_qos_service(cursor, service_sim_matrix, service_category, user_co
 
     qos_matrix = np.zeros((len(users), len(services)))
 
+    index = users.index(user_id)
+
     if len(service_sim_matrix) == 0 or len(service_sim_matrix[0]) == 0:
-        return qos_matrix
+        return qos_matrix, index
 
     for idx_s, service_s in tqdm(enumerate(services)):
         user_s = response_time_df[response_time_df['Service Id'] == service_s]
@@ -137,7 +137,7 @@ def time_aware_qos_service(cursor, service_sim_matrix, service_category, user_co
                 qos_j = rt_agg[rt_agg.index == services[idx_r]]
                 qos_j = qos_j.iloc[0][qos_type]
 
-                # Calculate time factor f3
+                # Calculate time factor f4
                 time_factor_f4 = service_r[qos_type].apply(lambda x: calc_time_factor_service(x))
 
                 qos_j_k = np.abs(service_r[qos_type].subtract(qos_j))
@@ -150,13 +150,18 @@ def time_aware_qos_service(cursor, service_sim_matrix, service_category, user_co
             qos_matrix[idx_i][idx_s] = qos_i + frac
 
     print("Computed qos for service and", qos_type, ":", qos_matrix.shape)
-    return qos_matrix
+    return qos_matrix, index
 
 
-def calculate_confidence_weights(sim_matrix):
+def calculate_confidence_weights(sim_matrix, user_flag):
     if len(sim_matrix) == 0:
         return 0
-    conf = np.apply_along_axis(lambda x: np.sum(np.square(x) / np.sum(x)), axis=1, arr=sim_matrix)
+    if user_flag:
+        axis = 0
+    else:
+        axis = 1
+
+    conf = np.apply_along_axis(lambda x: np.sum(np.square(x) / np.sum(x)), axis=axis, arr=sim_matrix)
     return np.sum(conf)
 
 
@@ -172,10 +177,10 @@ def get_prediction_weights_service(confidence_weight_user, confidence_weight_ser
 
 def get_prediction_weights(user_sim_matrix_rt, user_sim_matrix_tp, service_sim_matrix_rt, service_sim_matrix_tp):
     # Calculate confidence weights
-    conf_u_rt = calculate_confidence_weights(user_sim_matrix_rt)
-    conf_u_tp = calculate_confidence_weights(user_sim_matrix_tp)
-    conf_s_rt = calculate_confidence_weights(service_sim_matrix_rt)
-    conf_s_tp = calculate_confidence_weights(service_sim_matrix_tp)
+    conf_u_rt = calculate_confidence_weights(user_sim_matrix_rt, True)
+    conf_u_tp = calculate_confidence_weights(user_sim_matrix_tp, True)
+    conf_s_rt = calculate_confidence_weights(service_sim_matrix_rt, False)
+    conf_s_tp = calculate_confidence_weights(service_sim_matrix_tp, False)
 
     # Calculate prediction weights
     pred_wt_u_rt = get_prediction_weights_user(conf_u_rt, conf_s_rt)
@@ -185,23 +190,17 @@ def get_prediction_weights(user_sim_matrix_rt, user_sim_matrix_tp, service_sim_m
     return pred_wt_u_rt, pred_wt_u_tp, pred_wt_s_rt, pred_wt_s_tp
 
 
-def get_final_qos_values(qos_matrix_u_rt, qos_matrix_u_tp, qos_matrix_s_rt, qos_matrix_s_tp):
+def get_final_qos_values(qos_matrix_u_rt, qos_matrix_u_tp, qos_matrix_s_rt, qos_matrix_s_tp, user_id, index):
     # Calculate prediction weights for final QOS value predictions
     pred_wt_u_rt, pred_wt_u_tp, pred_wt_s_rt, pred_wt_s_tp = get_prediction_weights(qos_matrix_u_rt,
                                                   qos_matrix_u_tp, qos_matrix_s_rt, qos_matrix_s_tp)
 
-    # print(pred_wt_u_rt, pred_wt_u_tp, pred_wt_s_rt, pred_wt_s_tp)
-
     # User and service count
-    user_ct = qos_matrix_u_rt.shape[0]
-    service_ct = qos_matrix_u_rt.shape[1]
-
-    qos = np.zeros((user_ct, service_ct))
-
-    for i in range(user_ct):
-        for k in range(service_ct):
-            qos[i][k] = ((qos_matrix_u_rt[i][k] * pred_wt_u_rt) + (qos_matrix_s_rt[i][k] * pred_wt_s_rt)) + \
-                        ((qos_matrix_u_tp[i][k] * pred_wt_u_tp) + (qos_matrix_s_tp[i][k] * pred_wt_s_tp))
+    service_ct = len(qos_matrix_u_tp)
+    qos = np.zeros(service_ct)
+    for k in range(service_ct):
+        qos[k] = ((qos_matrix_u_rt[k] * pred_wt_u_rt) + (qos_matrix_s_rt[index][k] * pred_wt_s_rt)) + \
+                 ((qos_matrix_u_tp[k] * pred_wt_u_tp) + (qos_matrix_s_tp[index][k] * pred_wt_s_tp))
 
     return qos
 
@@ -214,16 +213,18 @@ def get_time_aware_Qos_prediction(cursor, service_category="Sports", user_countr
     service_sim_matrix_tp = open_pickle("./service_similarity_matrix_throughput.p")
 
     # Time aware qos user
-    qos_matrix_u_rt = time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_country, "Response Time")
-    qos_matrix_u_tp = time_aware_qos_user(cursor, user_sim_matrix_tp, service_category, user_country, "Throughput")
+    qos_matrix_u_rt = time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_country, 1, "Response Time")
+    qos_matrix_u_tp = time_aware_qos_user(cursor, user_sim_matrix_tp, service_category, user_country, 1, "Throughput")
 
     # Time aware qos service
-    qos_matrix_s_rt = time_aware_qos_service(cursor, service_sim_matrix_rt, service_category, user_country, "Response Time")
-    qos_matrix_s_tp = time_aware_qos_service(cursor, service_sim_matrix_tp, service_category, user_country, "Throughput")
+    qos_matrix_s_rt, index = time_aware_qos_service(cursor, service_sim_matrix_rt, service_category, user_country, 1,
+                                             "Response Time")
+    qos_matrix_s_tp, index = time_aware_qos_service(cursor, service_sim_matrix_tp, service_category, user_country, 1,
+                                             "Throughput")
 
     print("Calculated Time aware QOS values")
 
-    qos = get_final_qos_values(qos_matrix_u_rt, qos_matrix_u_tp, qos_matrix_s_rt, qos_matrix_s_tp)
+    qos = get_final_qos_values(qos_matrix_u_rt, qos_matrix_u_tp, qos_matrix_s_rt, qos_matrix_s_tp, 1, index)
 
     print("Predicted QOS values are: ")
     print(qos)
