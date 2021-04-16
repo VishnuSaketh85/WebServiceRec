@@ -197,10 +197,10 @@ def get_final_qos_values(qos_matrix_u_rt, qos_matrix_u_tp, qos_matrix_s_rt, qos_
 
     # User and service count
     service_ct = len(qos_matrix_u_tp)
-    qos = np.zeros(service_ct)
+    qos = np.zeros((service_ct, 2))
     for k in range(service_ct):
-        qos[k] = ((qos_matrix_u_rt[k] * pred_wt_u_rt) + (qos_matrix_s_rt[index][k] * pred_wt_s_rt)) + \
-                 ((qos_matrix_u_tp[k] * pred_wt_u_tp) + (qos_matrix_s_tp[index][k] * pred_wt_s_tp))
+        qos[k][0] = ((qos_matrix_u_rt[k] * pred_wt_u_rt) + (qos_matrix_s_rt[index][k] * pred_wt_s_rt))
+        qos[k][1] = ((qos_matrix_u_tp[k] * pred_wt_u_tp) + (qos_matrix_s_tp[index][k] * pred_wt_s_tp))
 
     return qos
 

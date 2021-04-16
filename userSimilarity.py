@@ -36,8 +36,8 @@ def get_similarity_matrix(cursor, location, category):
 
     userct = rt_data['User ID'].nunique()
     servicect = rt_data['Service ID'].nunique()
-    user_ids = list(set(rt_data['User ID'].tolist()))
-    service_ids = list(set(rt_data['Service ID'].tolist()))
+    user_ids = sorted(list(set(rt_data['User ID'].tolist())))
+    service_ids = sorted(list(set(rt_data['Service ID'].tolist())))
     tb_current = max(rt_data['Timeslice Id'].max(), rt_data['Timeslice Id'].max())
     userRtAvg = rt_data[['User ID', 'response_time']].groupby(['User ID']).agg('mean').to_numpy()[:, 0]
     serviceRtAvg = rt_data[['Service ID', 'response_time']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
@@ -59,6 +59,7 @@ def get_similarity_matrix(cursor, location, category):
                             alpha=1, beta=1, QOS_type="throughput", servicect=servicect, userct=userct, ids=service_ids)
 
     print("Similarity Computation done")
+    return user_ids, service_ids
 
 
 def computeSimilarityMatrix(dic, user_flag, qos_avg, t_current, alpha, beta, QOS_type, userct, servicect, ids):
