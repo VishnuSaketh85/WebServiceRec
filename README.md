@@ -11,7 +11,7 @@ Rishabh Manish Sahlot (rs3655@rit.edu)
 In this approach, we use the [WS-dream dataset](https://github.com/wsdream/wsdream-dataset) provided by [2]. It is a publicly available data which was collected in 2011. The WS-Dream dataset is divided into two datasets, the first dataset contains the response time and throughput of the record of service invocation of 339 users and 585 web services. The second dataset contains contains QoS measurements from 142 users on 4,500 Web services. It is taken over 64 consecutive time slices which is at 15 min intervals. The preprocessing involves removing duplicates from response time and throughput information.
 
 #### Requirements
-- Python 3.7+
+- Python 3.7.3+
 - Numpy
 - PostgreSQL
 - psycopg2
@@ -20,6 +20,8 @@ In this approach, we use the [WS-dream dataset](https://github.com/wsdream/wsdre
 - pickle
 - matplotlib
 - mcdm
+
+Run `pip install -r requirements.txt` to install all the *Python* dependencies
 
 #### Steps to run the program:
 ##### Insert Data into PostgreSQL:
