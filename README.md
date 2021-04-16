@@ -19,6 +19,7 @@ In this approach, we use the [WS-dream dataset](https://github.com/wsdream/wsdre
 - tqdm
 - pickle
 - matplotlib
+- mcdm
 
 #### Steps to run the program:
 ##### Insert Data into PostgreSQL:
