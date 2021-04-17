@@ -11,10 +11,10 @@ from userSimilarity import get_similarity_matrix
 app = Flask(__name__)
 
 connection = psycopg2.connect(user="postgres",
-                              password='Slayer@45',
+                              password='postgres',
                               host="127.0.0.1",
                               port="5432",
-                              database="vishnusaketh")
+                              database="webservicerecommendation")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -28,7 +28,7 @@ def home():
         # predicted_qos = pickle.load(open('results.p', 'rb'))
 
         # Comment out for just checking results
-        predicted_qos = get_time_aware_Qos_prediction(cursor, user_country=location, service_category=category)
+        predicted_qos = get_time_aware_Qos_prediction(cursor, user_country=location, service_category=category, user_id=user_id)
         pickle.dump(predicted_qos, open("results2.p", "wb"))
 
         ranking = mcdm.rank(predicted_qos, alt_names=service_ids, is_benefit_x=[False, True], s_method="TOPSIS",

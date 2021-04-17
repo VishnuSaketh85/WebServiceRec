@@ -205,7 +205,7 @@ def get_final_qos_values(qos_matrix_u_rt, qos_matrix_u_tp, qos_matrix_s_rt, qos_
     return qos
 
 
-def get_time_aware_Qos_prediction(cursor, service_category="Sports", user_country='United States'):
+def get_time_aware_Qos_prediction(cursor, service_category="Sports", user_country='United States', user_id=1):
 
     user_sim_matrix_res = open_pickle("./user_similarity_matrix_response_time.p")
     user_sim_matrix_tp = open_pickle("./user_similarity_matrix_throughput.p")
@@ -213,13 +213,13 @@ def get_time_aware_Qos_prediction(cursor, service_category="Sports", user_countr
     service_sim_matrix_tp = open_pickle("./service_similarity_matrix_throughput.p")
 
     # Time aware qos user
-    qos_matrix_u_rt = time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_country, 1, "Response Time")
-    qos_matrix_u_tp = time_aware_qos_user(cursor, user_sim_matrix_tp, service_category, user_country, 1, "Throughput")
+    qos_matrix_u_rt = time_aware_qos_user(cursor, user_sim_matrix_res, service_category, user_country, user_id, "Response Time")
+    qos_matrix_u_tp = time_aware_qos_user(cursor, user_sim_matrix_tp, service_category, user_country, user_id, "Throughput")
 
     # Time aware qos service
-    qos_matrix_s_rt, index = time_aware_qos_service(cursor, service_sim_matrix_rt, service_category, user_country, 1,
+    qos_matrix_s_rt, index = time_aware_qos_service(cursor, service_sim_matrix_rt, service_category, user_country, user_id,
                                              "Response Time")
-    qos_matrix_s_tp, index = time_aware_qos_service(cursor, service_sim_matrix_tp, service_category, user_country, 1,
+    qos_matrix_s_tp, index = time_aware_qos_service(cursor, service_sim_matrix_tp, service_category, user_country, user_id,
                                              "Throughput")
 
     print("Calculated Time aware QOS values")
