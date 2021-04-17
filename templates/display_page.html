@@ -4,11 +4,19 @@
     <meta charset="UTF-8">
     <title>Results</title>
 </head>
-<ul>
-{% for index, row in data.iterrows(): %}
-    <li>Service_id : {{ row['Service Id'] }}  Wsdl address : <a href ="{{row['WSDL Address']}}">{{row['WSDL Address']}}</a></li>
-{% endfor %}
-</ul>
+<table>
+ <tr>
+  <th> Service ID </th>
+  <th> WSDL Address </th>
+ </tr>
+    {%for index, row in data.iterrows()%}
+  <tr>
+    <td> {{row['Service Id']}} </td>
+    <td> <a href ="{{row['WSDL Address']}}">{{row['WSDL Address']}}</a> </td>
+  </tr>
+  {% endfor %}
+
+</table>
 <body>
 
 </body>
