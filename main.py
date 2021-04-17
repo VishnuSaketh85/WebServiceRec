@@ -5,6 +5,7 @@ import pandas as pd
 import psycopg2
 from flask import Flask, request, render_template, redirect, url_for
 
+from timeAwareQOSPrediction import get_time_aware_Qos_prediction
 from userSimilarity import get_similarity_matrix
 
 app = Flask(__name__)
@@ -24,11 +25,11 @@ def home():
         user_id = int(request.form.get("user_id").strip())
         cursor = connection.cursor()
         user_ids, service_ids = get_similarity_matrix(cursor, location, category, user_id)
-        predicted_qos = pickle.load(open('results.p', 'rb'))
+        # predicted_qos = pickle.load(open('results.p', 'rb'))
 
         # Comment out for just checking results
-        # predicted_qos = get_time_aware_Qos_prediction(cursor, user_country=location, service_category=category)
-        # pickle.dump(predicted_qos, open("results.p", "wb"))
+        predicted_qos = get_time_aware_Qos_prediction(cursor, user_country=location, service_category=category)
+        pickle.dump(predicted_qos, open("results2.p", "wb"))
 
         ranking = mcdm.rank(predicted_qos, alt_names=service_ids, is_benefit_x=[False, True], s_method="TOPSIS",
                             n_method="Vector")
