@@ -23,6 +23,7 @@ def home():
         location = request.form.get("location").strip()
         category = request.form.get("category").strip()
         user_id = int(request.form.get("user_id").strip())
+        print(user_id, category, location)
         cursor = connection.cursor()
         user_ids, service_ids = get_similarity_matrix(cursor, location, category, user_id)
         # predicted_qos = pickle.load(open('results.p', 'rb'))
@@ -33,7 +34,7 @@ def home():
 
         ranking = mcdm.rank(predicted_qos, alt_names=service_ids, is_benefit_x=[False, True], s_method="TOPSIS",
                             n_method="Vector")
-        candidates = ", ".join([str(i[0]) for i in ranking])
+        candidates = ", ".join([str(i[0]) for i in ranking][:5])
         query = "Select service_id, wsdl_address from webservices where service_id in (" + candidates + ")"
         cursor.execute(query)
 
