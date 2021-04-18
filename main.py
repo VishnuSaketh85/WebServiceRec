@@ -23,6 +23,7 @@ def home():
         location = request.form.get("location").strip()
         category = request.form.get("category").strip()
         user_id = int(request.form.get("user_id").strip())
+        print(location, category, user_id)
         cursor = connection.cursor()
         user_ids, service_ids = get_similarity_matrix(cursor, location, category, user_id)
         if user_id > len(user_ids):
@@ -55,15 +56,15 @@ def display_page(services_df):
 
 def print_mae(cursor, predicted_qos, user_id, service_ids):
     candidates = ", ".join([str(i) for i in service_ids])
-    query = "Select response_time from rtmatrix where service_id in (" + candidates + ") and user_id = " + \
-            str(user_id)
+    query = "Select service_id, avg(response_time) from rt_sliced where service_id in (" + candidates + ") and user_id = " + \
+            str(user_id) + 'group by service_id order by service_id'
     cursor.execute(query)
-    df_rt = pd.DataFrame(cursor.fetchall(), columns=["response_time"])
+    df_rt = pd.DataFrame(cursor.fetchall(), columns=["service id", "response_time"])
 
-    query = "Select throughput from tpmatrix where service_id in (" + candidates + ") and user_id = " + \
-            str(user_id)
+    query = "Select service_id, avg(throughput) from tp_sliced where service_id in (" + candidates + ") and user_id = " + \
+            str(user_id) + 'group by service_id order by service_id'
     cursor.execute(query)
-    df_tp = pd.DataFrame(cursor.fetchall(), columns=["throughput"])
+    df_tp = pd.DataFrame(cursor.fetchall(), columns=["service id", "throughput"])
     rt_mae, tp_mae = get_mae(df_rt, df_tp, predicted_qos)
     print("MAE for Response Time : " + str(rt_mae))
     print("MAE for Throughput : " + str(tp_mae))
