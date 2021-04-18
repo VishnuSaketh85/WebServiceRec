@@ -42,10 +42,10 @@ def get_similarity_matrix(cursor, location, category, user_id):
     userRtAvg = rt_data[['User ID', 'response_time']].groupby(['User ID']).agg('mean').to_numpy()[:, 0]
     serviceRtAvg = rt_data[['Service ID', 'response_time']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
     computeSimilarityMatrix(dic=userServiceDictRt, user_flag=True, qos_avg=userRtAvg, t_current=tb_current,
-                            alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct, ids=user_ids,
+                            alpha=0.085, beta=0.085, QOS_type="response_time", servicect=servicect, userct=userct, ids=user_ids,
                             user_id=user_id)
     computeSimilarityMatrix(dic=userServiceDictRt, user_flag=False, qos_avg=serviceRtAvg, t_current=tb_current,
-                            alpha=1, beta=1, QOS_type="response_time", servicect=servicect, userct=userct, ids=user_ids,
+                            alpha=0.09, beta=0.09, QOS_type="response_time", servicect=servicect, userct=userct, ids=user_ids,
                             user_id=user_id)
 
     userct = tp_data['User ID'].nunique()
@@ -54,10 +54,10 @@ def get_similarity_matrix(cursor, location, category, user_id):
     userTpAvg = tp_data[['User ID', 'throughput']].groupby(['User ID']).agg('mean').to_numpy()[:, 0]
     serviceTpAvg = tp_data[['Service ID', 'throughput']].groupby(['Service ID']).agg('mean').to_numpy()[:, 0]
     computeSimilarityMatrix(dic=userServiceDictTp, user_flag=True, qos_avg=userTpAvg, t_current=tb_current,
-                            alpha=1, beta=1, QOS_type="throughput", servicect=servicect, userct=userct, ids=user_ids,
+                            alpha=0.085, beta=0.085, QOS_type="throughput", servicect=servicect, userct=userct, ids=user_ids,
                             user_id=user_id)
     computeSimilarityMatrix(dic=userServiceDictTp, user_flag=False, qos_avg=serviceTpAvg, t_current=tb_current,
-                            alpha=1, beta=1, QOS_type="throughput", servicect=servicect, userct=userct, ids=user_ids,
+                            alpha=0.09, beta=0.09, QOS_type="throughput", servicect=servicect, userct=userct, ids=user_ids,
                             user_id=user_id)
 
     print("Similarity Computation done")
