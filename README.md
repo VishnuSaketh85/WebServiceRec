@@ -20,6 +20,7 @@ In this approach, we use the [WS-dream dataset](https://github.com/wsdream/wsdre
 - pickle
 - matplotlib
 - mcdm
+- Flask
 
 Run `pip install -r requirements.txt` to install all the *Python* dependencies
 

@@ -40,7 +40,7 @@ def home():
 
         ranking = mcdm.rank(predicted_qos, alt_names=service_ids, is_benefit_x=[False, True], s_method="TOPSIS",
                             n_method="Vector")
-        candidates = ", ".join([str(i[0]) for i in ranking])
+        candidates = ", ".join([str(i[0]) for i in ranking][:5])
         query = "Select service_id, wsdl_address from webservices where service_id in (" + candidates + ")"
         cursor.execute(query)
 
