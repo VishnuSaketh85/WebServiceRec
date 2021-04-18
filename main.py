@@ -11,10 +11,10 @@ from userSimilarity import get_similarity_matrix
 app = Flask(__name__)
 
 connection = psycopg2.connect(user="postgres",
-                              password='Slayer@45',
+                              password='postgres',
                               host="127.0.0.1",
                               port="5432",
-                              database="vishnusaketh")
+                              database="webservicerecommendation")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -32,8 +32,10 @@ def home():
         # predicted_qos = pickle.load(open('results.p', 'rb'))
 
         # Comment out for just checking results
-        predicted_qos = get_time_aware_Qos_prediction(cursor, user_country=location, service_category=category)
+        predicted_qos = get_time_aware_Qos_prediction(cursor, user_country=location, service_category=category, user_id=user_id)
         pickle.dump(predicted_qos, open("results2.p", "wb"))
+
+        print_mae(cursor, predicted_qos, user_id, service_ids)
 
         ranking = mcdm.rank(predicted_qos, alt_names=service_ids, is_benefit_x=[False, True], s_method="TOPSIS",
                             n_method="Vector")
@@ -49,10 +51,6 @@ def home():
 @app.route("/display_page", methods=["GET", "POST"])
 def display_page(services_df):
     return render_template("display_page.html", data=services_df)
-
-
-if __name__ == '__main__':
-    app.run()
 
 
 def print_mae(cursor, predicted_qos, user_id, service_ids):
@@ -84,3 +82,8 @@ def get_mae(df_rt, df_tp, predicted_qos):
     print(tp_mae, count)
     tp_mae = tp_mae / count
     return rt_mae, tp_mae
+
+
+if __name__ == '__main__':
+    app.run()
+
