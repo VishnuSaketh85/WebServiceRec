@@ -205,7 +205,7 @@ def get_final_qos_values(qos_matrix_u_rt, qos_matrix_u_tp, qos_matrix_s_rt, qos_
     return qos
 
 
-def get_time_aware_Qos_prediction(cursor, service_category="Sports", user_country='United States', user_id=1):
+def get_time_aware_Qos_prediction(cursor, service_category, user_country, user_id):
 
     user_sim_matrix_res = open_pickle("./user_similarity_matrix_response_time.p")
     user_sim_matrix_tp = open_pickle("./user_similarity_matrix_throughput.p")

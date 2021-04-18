@@ -11,10 +11,10 @@ from userSimilarity import get_similarity_matrix
 app = Flask(__name__)
 
 connection = psycopg2.connect(user="postgres",
-                              password='postgres',
+                              password='Slayer@45',
                               host="127.0.0.1",
                               port="5432",
-                              database="webservicerecommendation")
+                              database="vishnusaketh")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -23,20 +23,17 @@ def home():
         location = request.form.get("location").strip()
         category = request.form.get("category").strip()
         user_id = int(request.form.get("user_id").strip())
-        print(user_id, category, location)
         cursor = connection.cursor()
         user_ids, service_ids = get_similarity_matrix(cursor, location, category, user_id)
         # predicted_qos = pickle.load(open('results.p', 'rb'))
 
         # Comment out for just checking results
-        predicted_qos = get_time_aware_Qos_prediction(cursor, user_country=location, service_category=category, user_id=user_id)
+        predicted_qos = get_time_aware_Qos_prediction(cursor, user_country=location, service_category=category)
         pickle.dump(predicted_qos, open("results2.p", "wb"))
-
-        print_mae(cursor, predicted_qos, user_id, service_ids)
 
         ranking = mcdm.rank(predicted_qos, alt_names=service_ids, is_benefit_x=[False, True], s_method="TOPSIS",
                             n_method="Vector")
-        candidates = ", ".join([str(i[0]) for i in ranking][:5])
+        candidates = ", ".join([str(i[0]) for i in ranking])
         query = "Select service_id, wsdl_address from webservices where service_id in (" + candidates + ")"
         cursor.execute(query)
 
@@ -50,17 +47,21 @@ def display_page(services_df):
     return render_template("display_page.html", data=services_df)
 
 
+if __name__ == '__main__':
+    app.run()
+
+
 def print_mae(cursor, predicted_qos, user_id, service_ids):
     candidates = ", ".join([str(i) for i in service_ids])
-    query = "Select service_id, avg(response_time) from rt_sliced where service_id in (" + candidates + ") and user_id = " + \
-            str(user_id) + 'group by service_id order by service_id'
+    query = "Select response_time from rtmatrix where service_id in (" + candidates + ") and user_id = " + \
+            str(user_id)
     cursor.execute(query)
-    df_rt = pd.DataFrame(cursor.fetchall(), columns=["service_id", "response_time"])
+    df_rt = pd.DataFrame(cursor.fetchall(), columns=["response_time"])
 
-    query = "Select service_id, avg(throughput) from tp_sliced where service_id in (" + candidates + ") and user_id = " + \
-            str(user_id) + 'group by service_id order by service_id'
+    query = "Select throughput from tpmatrix where service_id in (" + candidates + ") and user_id = " + \
+            str(user_id)
     cursor.execute(query)
-    df_tp = pd.DataFrame(cursor.fetchall(), columns=["service_id", "throughput"])
+    df_tp = pd.DataFrame(cursor.fetchall(), columns=["throughput"])
     rt_mae, tp_mae = get_mae(df_rt, df_tp, predicted_qos)
     print("MAE for Response Time : " + str(rt_mae))
     print("MAE for Throughput : " + str(tp_mae))
@@ -79,7 +80,3 @@ def get_mae(df_rt, df_tp, predicted_qos):
     print(tp_mae, count)
     tp_mae = tp_mae / count
     return rt_mae, tp_mae
-
-
-if __name__ == '__main__':
-    app.run()
