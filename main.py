@@ -25,6 +25,10 @@ def home():
         user_id = int(request.form.get("user_id").strip())
         cursor = connection.cursor()
         user_ids, service_ids = get_similarity_matrix(cursor, location, category, user_id)
+        if user_id > len(user_ids):
+            user_id = 0
+        else:
+            user_id = user_ids[user_id]
         # predicted_qos = pickle.load(open('results.p', 'rb'))
 
         # Comment out for just checking results
